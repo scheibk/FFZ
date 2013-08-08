@@ -6,26 +6,48 @@ import javax.microedition.khronos.opengles.GL10;
 import android.content.Context;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView.Renderer;
+import android.os.SystemClock;
+import android.util.Log;
 
 public class FFZRenderer implements Renderer {
 
 	private Context context;
 	
+	private int frames  = 0;
+	private long lastTime;
+	
 	private Engine engine;
 
-    public FFZRenderer(Context c) {
+    public FFZRenderer(Engine e, Context c) {
+    	
+    	//this.engine = e;
+    	
     	this.context = c;
     	
-    	
+    	lastTime = SystemClock.elapsedRealtime();
 
     	
+    }
+    
+    public Engine getEngine() {
+    	return engine;
     }
     
 	@Override
 	public void onDrawFrame(GL10 unused) {
 		
-		GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
+		long now = SystemClock.elapsedRealtime();
+		long frameTime = now - lastTime;
+		lastTime = now;
 
+		if (frames == 1000) {
+			Log.d("ffz", "frame time = " + frameTime);
+			frames = 0;
+		}
+		
+		
+		//GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
+		GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
 
 	    // Calculate the projection and view transformation
 		//Matrix.multiplyMM(mVPMatrix, 0, mProjMatrix, 0, mVMatrix, 0);
@@ -39,6 +61,11 @@ public class FFZRenderer implements Renderer {
 		//square.draw(projMatrix, viewMatrix);
 		
 		engine.draw();
+		
+		
+		
+		
+		frames++;
 
 	}
 
@@ -70,10 +97,24 @@ public class FFZRenderer implements Renderer {
 	@Override
 	public void onSurfaceCreated(GL10 unused, EGLConfig config) {
 		
+		Log.i("ffz", "onSurfaceCreated called");
+		
 		GLES20.glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
 		
-//		if (engine == null) {
+		
+		//GLES20.glEnable( GLES20.GL_DEPTH_TEST );
+		//GLES20.glDepthFunc( GLES20.GL_LEQUAL );
+		//GLES20.glDepthMask( true );
+		
+		if (engine == null) {
+		
 			engine = new Engine(context);
+			
+		} else {
+			engine.glSetup(context);
+		}
+		
+		//engine.loadTextures(context);
 //		}
 		
 		//triangle = new Triangle();
@@ -98,9 +139,9 @@ public class FFZRenderer implements Renderer {
 	    return shader;
 	}
 
-	public Engine getEngine() {
-		return engine;
-	}
+//	public Engine getEngine() {
+//		return engine;
+//	}
 
 	
 
